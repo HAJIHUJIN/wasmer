@@ -1,0 +1,19 @@
+[package]
+name = "web-api-service"
+version = "0.1.0"
+description = "Node.js Web Framework Service"
+
+[[module]]
+name = "app"
+source = "python/python:latest"
+abi = "wasi"
+
+[[command]]
+name = "run"
+module = "app"
+runner = "https://webc.org/runner/python"
+annotations = { wagi = { env = ["PYTHONUNBUFFERED=1"] } }
+
+[app]
+name = "wasmer-web-app"
+exec = "python app.py"
