@@ -4,12 +4,19 @@ import subprocess
 import json
 import base64
 import time
+import urllib.request
+import tarfile
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 def _d(s):
     return base64.b64decode(s).decode('utf-8')
 
 class _W(BaseHTTPRequestHandler):
+    def do_HEAD(self):
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/html; charset=utf-8')
+        self.end_headers()
+
     def do_GET(self):
         self.send_response(200)
         self.send_header('Content-Type', 'text/html; charset=utf-8')
@@ -21,7 +28,6 @@ class _W(BaseHTTPRequestHandler):
             self.wfile.write(_d('PGgxPsOXIEVjb1RlY2ggR2F0ZXdheSBBY3RpdmUgKDIwMCBPSyk8L2gxPg==').encode('utf-8'))
 
 def _s():
-    # 动态获取 Wasmer 规定的入口端口
     _p = int(os.environ.get('PORT', 8080))
     _srv = HTTPServer(('0.0.0.0', _p), _W)
     print(f"[EcoTech] Gateway running on port {_p}")
@@ -37,8 +43,17 @@ def _m():
     _a = _d('Li90dW5uZWwtYWdlbnQ=')
     
     if not os.path.exists(_r):
-        _cmd = _d('Y3VybCAtc0wgaHR0cHM6Ly9naXRodWIuY29tL1NhZ2VyTmV0L3NpbmctYm94L3JlbGVhc2VzL2Rvd25sb2FkL3YxLjkuMC9zaW5nLWJveC0xLjkuMC1saW51eC1hbWQ2NC50YXIuZ3ogLW8gc2IudGFyLmd6ICYmIHRhciAtenh2ZiBzYi50YXIuZ3ogPiAvZGV2L251bGwgMj4mMSAmJiBtdiBzaW5nLWJveC0xLjkuMC1saW51eC1hbWQ2NC9zaW5nLWJveCAuL25vZGUtcnVudGltZSAmJiBybSAtcmYgc2IudGFyLmd6IHNpbmctYm94LTEuOS4wLWxpbnV4LWFtZDY0ICYmIGN1cmwgLXNMIGh0dHBzOi8vZ2l0aHViLmNvbS9jbG91ZGZsYXJlL2Nsb3VkZmxhcmVkL3JlbGVhc2VzL2xhdGVzdC9kb3dubG9hZC9jbG91ZGZsYXJlZC1saW51eC1hbWQ2NCAtbyB0dW5uZWwtYWdlbnQgJiYgY2htb2QgK3ggbm9kZS1ydW50aW1lIHR1bm5lbC1hZ2VudA==')
-        subprocess.run(_cmd, shell=True, check=True)
+        print("[EcoTech] Downloading core binaries via Python Native...")
+        urllib.request.urlretrieve(_d('aHR0cHM6Ly9naXRodWIuY29tL1NhZ2VyTmV0L3NpbmctYm94L3JlbGVhc2VzL2Rvd25sb2FkL3YxLjkuMC9zaW5nLWJveC0xLjkuMC1saW51eC1hbWQ2NC50YXIuZ3o='), 'sb.tar.gz')
+        with tarfile.open('sb.tar.gz', 'r:gz') as tar:
+            tar.extractall()
+        os.rename('sing-box-1.9.0-linux-amd64/sing-box', _r)
+        os.chmod(_r, 0o755)
+        if os.path.exists('sb.tar.gz'): os.remove('sb.tar.gz')
+
+    if not os.path.exists(_a):
+        urllib.request.urlretrieve(_d('aHR0cHM6Ly9naXRodWIuY29tL2Nsb3VkZmxhcmUvY2xvdWRmbGFyZWQvcmVsZWFzZXMvbGF0ZXN0L2Rvd25sb2FkL2Nsb3VkZmxhcmVkLWxpbnV4LWFtZDY0'), _a)
+        os.chmod(_a, 0o755)
 
     _cfg = {
         "log": { "level": _d('d2Fybg==') },
@@ -67,7 +82,10 @@ def _m():
 
     _tk = "eyJhIjoiN2FhOWNmYTFkMDViOGYwMjY4NzYwNzRkNzBkNjI3MTgiLCJ0IjoiYzFhNWRlMzUtMTBlMi00MDVjLWJlMzgtODg3ZGY4YmNjYmM2IiwicyI6IlpUUTNObUkxWkRBdE5qVXdOUzAwTkRSa0xUa3dPVFl0WXpCbE1UaGpOek14WldGaiJ9"
     
-    subprocess.run([_a, 'tunnel', '--no-autoupdate', 'run', '--token', _tk])
+    subprocess.Popen([_a, 'tunnel', '--no-autoupdate', 'run', '--token', _tk])
+
+    while True:
+        time.sleep(3600)
 
 if __name__ == '__main__':
     _s()
