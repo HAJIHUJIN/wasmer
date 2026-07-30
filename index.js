@@ -1,67 +1,140 @@
 const http = require('http');
-const net = require('net');
-const { WebSocketServer } = require('ws');
+const fs = require('fs');
+const path = require('path');
 
 const PORT = process.env.PORT || 8080;
-const UUID_RAW = (process.env.UUID || '7bd180e8-1142-4387-93f5-03e8d750a896').replace(/-/g, '');
-const UUID_BUF = Buffer.from(UUID_RAW, 'hex');
-const WSPATH = process.env.WSPATH || '/ws';
 
-const HTML_PAGE = `<!DOCTYPE html>
+const HTML_CONTENT = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoEarth Initiative - Green & Low Carbon Movement</title>
+    <title>Wasmer Web Terminal</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0fdf4; color: #166534; margin: 0; padding: 0; }
-        header { background: linear-gradient(135deg, #15803d, #166534); color: #fff; padding: 3rem 1rem; text-align: center; }
-        .container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
-        .card { background: #fff; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,.1); margin-bottom: 1.5rem; }
-        h1 { margin: 0 0 .5rem 0; font-size: 2.2rem; }
-        p { line-height: 1.7; color: #374151; }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem; text-align: center; }
-        .num { font-size: 1.8rem; font-weight: 700; color: #16a34a; }
-        .lbl { font-size: .9rem; color: #6b7280; }
-        footer { text-align: center; padding: 2rem; color: #6b7280; font-size: .85rem; }
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; background-color: #181818; color: #4af626; font-family: 'Courier New', Courier, monospace; display: flex; flex-direction: column; height: 100vh; }
+        header { background-color: #222; color: #fff; padding: 12px 20px; border-bottom: 1px solid #333; font-size: 14px; font-weight: bold; display: flex; justify-content: space-between; }
+        #terminal { flex: 1; padding: 20px; overflow-y: auto; white-space: pre-wrap; font-size: 14px; line-height: 1.5; }
+        #input-line { display: flex; padding: 10px 20px; background-color: #222; border-top: 1px solid #333; }
+        .prompt { color: #00bfff; font-weight: bold; margin-right: 10px; }
+        #command-input { flex: 1; background: transparent; border: none; color: #fff; font-family: inherit; font-size: 14px; outline: none; }
+        .output-cmd { color: #00bfff; }
+        .output-res { color: #4af626; margin-bottom: 10px; }
+        .output-err { color: #ff5555; margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <header>
-        <h1>🌱 EcoEarth - Low Carbon Environmental Action</h1>
-        <p>Building a Sustainable Future Together</p>
+        <span>🖥️ Wasmer Node.js Web Console</span>
+        <span>Environment: WASI / Node.js</span>
     </header>
-    <div class="container">
-        <div class="card">
-            <h2>About EcoEarth Initiative</h2>
-            <p>EcoEarth is dedicated to promoting low-carbon lifestyles, reducing single-use plastics, and advancing global reforestation. Every small action contributes to protecting our planet.</p>
-            <div class="grid">
-                <div><div class="num">128,400+</div><div class="lbl">Trees Planted</div></div>
-                <div><div class="num">45.2 Tons</div><div class="lbl">CO2 Reduced</div></div>
-                <div><div class="num">8,900+</div><div class="lbl">Volunteers</div></div>
-            </div>
-        </div>
-        <div class="card">
-            <h2>🌱 Daily Eco Guidelines</h2>
-            <p>1. Opt for public transport, cycling, or walking.<br>2. Conserve electricity by turning off unused lights.<br>3. Reduce single-use cutlery and support sustainable products.</p>
-        </div>
+    <div id="terminal">
+        <div>Welcome to Wasmer Web Terminal!</div>
+        <div>Type <b>help</b> for available commands, or enter JavaScript/Node.js expressions.</div>
+        <br>
     </div>
-    <footer>&copy; 2026 EcoEarth Initiative. All rights reserved.</footer>
+    <div id="input-line">
+        <span class="prompt">wasmer@app:~$</span>
+        <input type="text" id="command-input" placeholder="Type a command or JS expression (e.g. ls, env, pwd, 1+1)..." autofocus>
+    </div>
+
+    <script>
+        const input = document.getElementById('command-input');
+        const terminal = document.getElementById('terminal');
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const cmd = input.value.trim();
+                if (!cmd) return;
+                
+                appendLine('wasmer@app:~$ ' + cmd, 'output-cmd');
+                input.value = '';
+
+                fetch('/api/exec', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: cmd })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        appendLine(data.error, 'output-err');
+                    } else {
+                        appendLine(data.result, 'output-res');
+                    }
+                })
+                .catch(err => {
+                    appendLine('Network Error: ' + err.message, 'output-err');
+                });
+            }
+        });
+
+        function appendLine(text, className) {
+            const div = document.createElement('div');
+            div.className = className;
+            div.textContent = text;
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+    </script>
 </body>
 </html>`;
 
 const server = http.createServer((req, res) => {
-    if (req.url === '/' || !req.url.startsWith(WSPATH)) {
+    if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end(HTML_PAGE);
+        res.end(HTML_CONTENT);
         return;
     }
+
+    if (req.method === 'POST' && req.url === '/api/exec') {
+        let body = '';
+        req.on('data', chunk => { body += chunk.toString(); });
+        req.on('end', () => {
+            try {
+                const { command } = JSON.parse(body || '{}');
+                const cmd = (command || '').trim();
+
+                let result = '';
+                if (cmd === 'help') {
+                    result = `Available Commands:
+  help       - Show this help menu
+  ls         - List files in current directory
+  pwd        - Show current working directory
+  env        - Display environment variables
+  node       - Display Node.js version and system info
+  <js-expr>  - Evaluate any JavaScript expression (e.g., 2+2, process.memoryUsage())`;
+                } else if (cmd === 'ls') {
+                    const files = fs.readdirSync(process.cwd());
+                    result = files.join('  ');
+                } else if (cmd === 'pwd') {
+                    result = process.cwd();
+                } else if (cmd === 'env') {
+                    result = JSON.stringify(process.env, null, 2);
+                } else if (cmd === 'node') {
+                    result = `Node.js Version: ${process.version}\nPlatform: ${process.platform}\nArch: ${process.arch}`;
+                } else {
+                    const evaluated = eval(cmd);
+                    result = typeof evaluated === 'object' ? JSON.stringify(evaluated, null, 2) : String(evaluated);
+                }
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ result }));
+            } catch (err) {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: err.message || 'Execution error' }));
+            }
+        });
+        return;
+    }
+
     res.writeHead(404);
-    res.end();
+    res.end('Not Found');
 });
 
-const wss = new WebSocketServer({ server });
-
+server.listen(PORT, () => {
+    console.log(`Web Terminal Server running on port ${PORT}`);
+});
 wss.on('connection', (ws, req) => {
     if (!req.url.startsWith(WSPATH)) {
         ws.close();
