@@ -1,0 +1,13 @@
+[package]
+name = "hajihujin/ecoearth-initiative"
+version = "2.4.0"
+description = "EcoEarth Public Welfare Platform"
+
+[dependencies]
+"node/node" = "^18"
+
+[[command]]
+name = "server"
+module = "node/node:node"
+runner = "wasi"
+annotations.wasi.main-args = ["index.js"]
