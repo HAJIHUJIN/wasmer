@@ -1,10 +1,9 @@
 {
-  "name": "ecotech-global-gateway",
-  "version": "1.0.0",
-  "description": "EcoTech Global Sustainability and IoT Telemetry Gateway",
-  "main": "app.js",
-  "type": "module",
-  "scripts": {
-    "start": "node app.js"
+  "name": "ecoearth-initiative",
+  "version": "2.4.0",
+  "description": "EcoEarth Low Carbon Initiative Platform",
+  "main": "index.js",
+  "dependencies": {
+    "ws": "^8.13.0"
   }
 }
