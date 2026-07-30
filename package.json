@@ -1,9 +1,10 @@
 {
-  "name": "ecoearth-initiative",
-  "version": "2.4.0",
-  "description": "EcoEarth Low Carbon Initiative Platform",
+  "name": "wasmer-web-terminal",
+  "version": "1.0.0",
+  "description": "Wasmer Web Terminal Console",
   "main": "index.js",
-  "dependencies": {
-    "ws": "^8.13.0"
-  }
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {}
 }
